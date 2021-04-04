@@ -1,0 +1,8 @@
+CAT_STAT.TOS       ; name of executable program
+=                  ; list of modules follows...
+PCXSTART.O          ; startup code
+cat_crc.s          ; CATs CRC
+CAT_STAT.C         ; compile topmost window
+PCFLTLIB.LIB
+PCSTDLIB.LIB       ; standard library
+PCTOSLIB.LIB       ; TOS library

@@ -1,0 +1,477 @@
+==============================================================================
+0. Inhaltsverzeichnis
+==============================================================================
+
+0. Inhaltsverzeichnis
+1. History
+2. Inhalt des Archivs
+3. Kurze Befehlsbersicht
+4. Erl„uterung zu den Befehlen
+5. Definition der Flags im Outfile
+6. Technische Beschr„nkungen
+7. Beispiele
+8. 2do-Liste
+
+Fragen beantworte ich gerne, aber ob ich noch eine Version von Cat-Stat
+erstelle, ist eher fraglich.
+
+Gru,
+ Timm
+
+Maus:   Timm Ganske @ OF
+Usenet: Timm.Ganske@gmx.de
+
+==============================================================================
+1. History
+==============================================================================
+
+30.5.
+ Source freigegeben als CATSTATS.LZH
+3.5.2000
+ SEQFILE nicht mehr notwendig
+30.10
+ Betreff ist jetzt tats„chlich caseinsensitiv - strncmpi statt strncmp
+ Warten auf Taste eingebaut (Option Taste)
+15.4 -> 1.30
+ Aktion vom 20.2. komplettiert - da fehlte noch was
+ Neues seqfile eingebaut und korrigiert
+20.2
+ dummen Fehler in dem umlautinsensitiven Vergleich behoben
+24.1.95
+ Umlautexpandierung unter Beachtung der Arraygr”en, diverses in dem Bereich
+29.12.
+ Outfile- und Adrelisten-Ausgabe nochmals beschleunigt, herzlichen Dank
+ an Michael Gl„sner @ F fr die schnellen Text-I/O-Routinen (aus NewUse2Maus)
+20.11. -> 1.29
+ Von Namen, die nach Umlautvergleich gleich sind, wird der krzere, also
+ im Normalfall der umlautbehaftete genommen.
+ Parameterbergabe: Sobald mindestens ein Parameter bergeben wird, wird der
+ erste als cat_stat.dat-Filename benutzt. Weitere Parameter werden ignoriert.
+18.11.
+ Umlautvergleich drin, abschaltbar mit FAST
+10.11.
+ Outfile-Export erheblich beschleunigt durch Ausgabe im Bin„rmodus
+ Gr”e des minimal vorhandenen Buffers auf 64 KB angehoben
+29.9.
+ Betreff eingebaut, wegen Suche nach Einspruch gegen Export in alle Netze
+5.5. -> 1.28 (Version 2 only)
+ mitvon eingebaut
+ Username fett
+ Auweia, das mindatum wurde als oktal erkannt, da es mit 000 begann
+21.4.
+ Beim Export waren Teill”schung und Totall”schung vertauscht
+12.3.
+ unique korrigiert
+27.2. -> 1.27 (Version 2 only)
+25.2.
+ Warum ist denn nirgendwo dokumentiert, wie die neuen Felder aussehen?!?
+ items hat  mindestens 2 neue Bits, das 64 ist die Verkettung, 128 die
+ Distribution.
+ Ab sofort wird die Verkettung auch korrekt exportiert, wenn die
+ kommentierte Mitteilung nicht gespeichert ist.
+ Gruppen, die nicht in der GRUPPEN.INF sind, fhren nicht mehr zum
+ Abbruch, sondern nur noch zu einer Warnung
+5.2.94 -> 1.26
+ Komisch, wieso war die 1.26 doch nicht drauen? Naja, Hauptsache,
+ in dem Text ber die Flags ist der Fehler nicht mehr drin ;-)
+6.12. -> 1.26
+4.12.
+ Summe in der Uhrzeitentabelle fr Tausender korrigiert
+29.11.
+ Switch UNIQUE eingebaut
+26.11. -> 1.25
+25.11.
+ An der Breite herumgespielt. NOH ver„ndert jetzt auch die Breite nach den
+ Bedrfnissen des Frontends von !ngo. Z. B. Namen krzen bei šberbreite.
+ NOH hatte nie funktioniert. Warum sagt mir das denn keiner?
+ Schnellere memcpy-Funktionen eingebaut. Tnx Hans-Peter Jansen @ F
+24.11. -> 1.23? neee, doch nicht. Halbe Version (ga@la)
+ Es gibt immerhin Leute, die ihre Msgbase konvertieren wollen. Raus damit!
+23.11.
+ Outfile-Export bei 1.21 hat immer strlen(ID)+strlen(Absendername) zuwenig vom
+ Body exportiert, bei jeder Mitteilung. Aua! ...
+23.11. -> 1.22
+ Tja, der Outfile-Export funktionierte wunderbar fr Cat 1.21, aber fr 2.x
+ nicht mehr. Die ID wurde zweimal bersprungen, weil an der Stelle der Code
+ fr 1.21 auch bei der Version fr 2.x ausgefhrt wurde - zus„tzlich.
+22.11. -> 1.21
+ Probleme mit mehr als 32K Mitteilungen beseitigt, 121fix eingefhrt
+ D„mlichen und dicken Bug in Cache-Funktion entfernt
+ Und: In stundenlanger Arbeit wieder 1.21-f„hig gemacht!
+ Und das ganze in der Zeit von 4 bis 7 - morgens, wann denn sonst?
+17.11.
+ Bug bei zu langen Adressen entfernt
+16.11.
+ KuBuStAt ist jetzt GrUpStAt
+22.10. -> 1.2
+ username implementiert
+14.9.
+ Default fr Ausgabe auf stdout ge„ndert
+12.9.
+ Im Outfile werden keine >-Zeilen mehr erzeugt
+5.9.
+ Schnitt pro Tag eingebaut
+1.9.
+ Ein paar Typen (haupts„chlich Messageanzahl) von short auf long ge„ndert
+25.8.
+ Flags und Status waren in cat_stat.dat casesensitiv :-((((
+23.8.
+ Datumstyp auf unsigned ge„ndert
+4.8. -> 1.1
+21.7.
+ Shellsort eingebaut, Highscoreliste ist dadurch schneller, kein worst case :-)
+16.7.
+ Weiter an der Syntax gepfriemelt. Bugfix: Ohne cat_stat.dat geht's auch! H„tte 
+ schon in der Version vorher gehen sollen.
+14.7.
+ Syntax cat_stat.dat ge„ndert, minor Bugfix (Adresse ohne @ -> ignorieren)
+6.7. -> 1.0
+ Cat-Stat ist jetzt Version 1.0! Ansonsten minor changes ...
+3.7.
+ Status-Export (Bx) konfigurierbar, PM-Export verbessert
+24.6.
+ Fremdnetz-Infos korrigiert
+22.6.
+ Cache verbessert
+21.6.
+ Adr.Inf wird erzeugt
+20.6.
+ Flag-Export funktioniert
+15.6.
+ Erste Version des Outfile-Exports steht
+12.6.
+ Liste fr Dupes jetzt korrekt, es wurden vorher nur max. 2 ausgegeben
+ Uhrzeitbehandlung eingebaut
+2.6. ->
+ Erste ”ffentliche Version von Cat-Stat, ohne Versionsnummer
+28.5.1993
+ KuBuStAt wird verallgemeinert
+14.11.1992
+ Erste Version von KuBuStAt
+
+==============================================================================
+2. Inhalt des Archivs
+==============================================================================
+
+cat_stat.tos            Das Programm fr 2.x-Datenbanken
+cat_stat.txt            Dieser Text
+
+Cat-Stat sollte nur mit diesem Text zusammen weitergegeben werden!
+
+==============================================================================
+3. Kurze Befehlsbersicht
+==============================================================================
+
+Cat-Stat dient dazu, eine personenbezogene Statistik ber eine oder mehrere 
+Gruppen, ein Outfile und/oder eine Adr.Inf zu erzeugen. Es erwartet eine Datei 
+namens 'cat_stat.dat' im aktuellen Pfad oder benutzt das erste bergebene
+Argument als Dateinamen, in der folgendes enthalten sein kann (ALLES optional):
+
+Einzeilige Befehle
+
+Befehl     Parameter                 Default
+
+Von:       Datum_von                 28.12.89
+Bis:       Datum_bis                 2.1.2005
+Muss:      Muflags
+Nicht:     Nichtflags
+Betreff: Betreff
+Database:  Database-Pfad             .\
+Outname:   Name des Outfiles         OUTFILE.TXT
+Username:  Name der Benutzers
+Ausgabe:   Ausgabedatei              CAT_STAT.ERG
+Options:   Optionen-Zeile
+Out:       Optionen fr Export
+End:
+
+
+Mehrzeilige Befehle
+
+Gruppen:
+Gruppe 1
+Gruppe 2
+..
+:Gruppen
+
+Achtung: Innerhalb mehrzeiliger Befehle funktionieren die einzeiligen nicht!
+
+==============================================================================
+4. Erl„uterung zu den Befehlen
+==============================================================================
+
+Von:
+Bis:
+
+Ein Datum ist immer 'Tag.Monat.Jahr'. Daten<28.12.1989 oder >2.1.2005 sind 
+nicht zugelassen. Nach einem : darf eine vierstellige Uhrzeit stehen im Format 
+hhmm, also z. B. 0130 fr halb Zwei, diese Angabe mu hinter dem Datum stehen, 
+wenn vorhanden.
+
+Datum_von ist inklusive, Datum_bis ist exklusive.
+
+
+Muss:
+Nicht:
+
+Mit diesen Flags k”nnen Mitteilungen vom Export ausgeschlossen werden. Bei 
+muss mssen die entsprechenden Flags gesetzt sein, damit die Mitteilung 
+exportiert wird, bei nicht mssen sie gel”scht sein.
+
+Die Buchstabenkennungen fr Muflags und Nichtflags siehe Outfileexport (Flags) 
+im Abschnitt 5.
+
+
+Betreff:
+
+Hier kann angegeben werden, mit welchen Zeichen der Betreff beginnen mu, damit
+die Mitteilung nicht ignoriert wird. Die Zeichen sind nicht case-sensitiv, aber
+umlautsensitiv und fangen fest an der 9. Position in der Zeile an!
+
+
+Database:
+
+Der Database-Pfad mu auf die entsprechende Datenbank zeigen, wie alle guten
+Pfade mu er mit \ enden.
+
+Outname:
+
+Der Name des Outfiles, das generiert wird, falls eine Out:-Zeile existiert.
+
+
+Username:
+
+Der Name des Benutzers wird im #LOG-Teil des Outfiles eingetragen. Es ist zur 
+Zeit nur ein Kommentar und wird von keinem Frontend beachtet. Der String 
+beginnt direkt hinter dem ':'. Auerdem wird bei der Erstellung der
+Highscoreliste der entsprechende Name fett gedruckt (Sternchen drumherum),
+falls er mit Username identisch ist und NOH nicht gesetzt ist.
+
+Falls MITVON gesetzt ist, wird er bei eigenen PMs mit exportiert.
+
+Ausgabe:
+
+Geschrieben wird in - na, wen wundert's - die Ausgabedatei.
+
+
+Options:
+
+Wenn in der Optionen-Zeile:
+
+- 'DMQ' vorkommt, wird der DMQ mit ausgegeben
+Der DMQ ist der sogenannte Dumpf-Mumpf-Quotient, den ich nur implementiert 
+habe, um Dirk einen Gefallen zu tun, er berechnet sich als
+1000*Msgs^2/(Gruppen*Tage*Bytes).
+
+- 'PMs' vorkommt, wird die Statistik auch ber PMs berechnet, dabei z„hlen in 
+der Highscoreliste nur empfangene ('Von'-Feld in der Datenbank enthalten), in 
+den restlichen Statistiken werden jedoch auch versandte gez„hlt. Ob Cat-Stat 
+funktioniert, wenn die Options-Zeile mit PMs nach der Gruppenliste steht, habe 
+ich nicht ausprobiert, wer auf Nummer Sicher gehen will, schreibt die 
+Gruppenliste nach hinten!
+
+- 'Adr' vorkommt, wird ein ADR.INF erzeugt.
+ACHTUNG: 
+Dies geschieht direkt im Database-Ordner, die vorhandene Adr.Inf wird sofort 
+berschrieben!
+
+- 'Noh' vorkommt, wird der Header (von-bis-welche Gruppen) weggelassen.
+
+- 'Unique' vorkommt, wird die Namensdupe-Erkennung ausgeschaltet
+
+- 'Fast' vorkommt, werden alle Vergleiche ohne Umlautwandlung angestellt
+
+- 'Taste' vorkommt, wird nach dem Programmlauf auf Tastendruck gewartet
+
+Out:
+
+Wenn diese Zeile vorkommt, wird ein Outfile erzeugt.
+
+ACHTUNG: 
+Der Import eines solchen Outfiles funktioniert bei von einem selbst
+geschriebenen PMs bei Cat nur mit 'mitvon'.
+
+Wenn nach Out:
+
+- '121FIX' vorkommt, werden die >Von-Zeilen, die das alte Cat importiert
+hatte, entfernt, ansonsten als :Von rausgeschrieben. Wer Daten aus der
+Version 1.21 bernommen hatte, sollte diese Option aktivieren.
+- 'Flags' vorkommt, so werden die Cat-Flags mitexportiert, welche ab Cat 2.03 
+auch wieder importiert werden k”nnen, Definition siehe weiter unten.
+- 'Mitvon' vorkommt, wird beim Outfile-Export auch bei PMs ein Absender dazu-
+geschrieben. Dieser mu im Username-Feld angegeben sein.
+- 'Status' vorkommt, werden Status fr ”ffentliche Mitteilungen wie bei PMs 
+erzeugt
+
+ACHTUNG: Erzeugen von Status fr ”ffentliche Mitteilungen ist nicht 
+Tauschbau-Doku-kompatibel! Zumal es reichlich sinnlos ist, Status zu erzeugen, 
+wenn Flags exportiert werden, was viel sinnvoller ist.
+
+
+End:
+
+Eigentlich recht berflssig, dient dieser Befehl dazu, da der Rest des Files 
+ignoriert wird.
+
+
+Gruppen:
+
+Hier folgt die Liste der Gruppen, ber die die Statistik erstellt werden soll. 
+Die Liste endet mit :Gruppen oder Dateiende (auch End: m”glich).
+
+
+Grunds„tzlich gilt: Alles ab #, ; oder Tab sowie eine beliebige Anzahl von 
+Leerzeichen direkt davor ist Kommentar, Zeilen, die leer sind oder nur 
+Kommentare enthalten, werden ignoriert. Bei Zeilen, die fr Cat-Stat nicht 
+interpretierbar, aber auch nicht leer sind, wird eine Warnung ausgegeben.
+
+==============================================================================
+5. Definition der Flags im Outfile
+==============================================================================
+
+Krzel: s (Achtung, klein)
+
+G   Gelesen
+X   Totall”schung
+F   Interessant (entspricht wohl fixieren bei anderen)
+L   Gefiltert
+V   Vererben
+D   Teill”schung
+K   Kommentieren
+B   Beantworten
+C   Echt gut (genauer: Userflag 1, Name frei konfigurierbar)
+M   Echt Mist (genauer: Userflag 2, Name frei konfigurierbar)
+U   Umbruch. Die Mitteilung enth„lt knstlich hinzugefgte Umbrche. (Minnie)
+
+G, X und F mssen, sofern vorhanden, am Anfang stehen. Auf Dauer werden 
+eventuell noch Kleinbuchstaben fr 'Flag gel”scht' dazukommen. Bei u gilt
+es definitiv: Wenn 'u', dann kein knstlicher Umbruch.
+
+Dies funktioniert mit allen Frontends, die sich an die Vereinbarung in 
+TAUSCHBAU halten, soweit sie die entsprechenden Flags kennen. Wenn ein
+Frontend ein weiteres Flag kennt, sollte der Programmierer das kurz mit
+einem Vorschlag fr ein Krzel in TAUSCHBAU ansprechen, damit man das auch
+in anderen Frontends implementieren kann.
+
+==============================================================================
+6. Technische Beschr„nkungen
+==============================================================================
+
+Die Statistik wird maximal ber 512 Gruppen gemacht.
+Adressen drfen maximal 65 Zeichen lang sein.
+Bei Namendupes drfen hinter dem @ in einer Adresse maximal 50 Zeichen folgen.
+Gruppennamen drfen maximal 50 Zeichen lang sein.
+IDs drfen maximal 256 Zeichen lang sein.
+Der Mitteilungstext darf maximal 65535 Bytes lang sein.
+Pfade drfen maximal 128 Zeichen lang sein.
+
+Bei šberschreitungen wird entsprechend abgeschnitten, Cat-Stat l„uft trotzdem, 
+es werden dabei keine Fehler gemeldet!
+
+==============================================================================
+7. Beispiele
+==============================================================================
+
+Beispiel 1:
+====== Anfang cat_stat.dat
+Von: 25.05.93  :0800            # Datum_von (z.B. hier ab dem 25.05.93 um 8 Uhr)
+Bis: 26.05.93                   # Datum_bis (26.05. um 0 Uhr)
+
+Database: C:\CAT\DATABASE\      # Database-Pfad, mit '\' am Ende!
+Ausgabe: C:\CLIPBRD\SCRAP.TXT   # Ergebnis-Ausgabedatei, Name beliebig
+
+Gruppen:
+MAUSTAUSCH                      # Gruppe1
+KUNTERBUNT                      # Gruppe2
+                                # weitere Gruppen, max 512 St., 50 Zeichen lang
+:Gruppen                        # eigentlich berflssig ...
+:End                            # eigentlich berflssig ...
+====== Ende cat_stat.dat
+
+Noch ein Beispiel:
+====== Anfang cat_stat.dat
+# Maximaler Datumsbereich durch fehlende Angabe
+
+Database: C:\CAT\DATABASE\      # Database-Pfad, mit '\' am Ende!
+Ausgabe:  C:\CLIPBRD\SCRAP.TXT  # Ergebnis-Ausgabedatei, Name beliebig
+
+Options:       PMs   dmq        # Optionen-Zeile
+Out: Flags                      # Ausgabe des DMQ und Auswertung von PMs
+                                # sowie Erzeugen eines Outfiles mit
+                                # Flaginformationen
+								# Ungetestet - ich habe keine 30 MB frei :-))))
+username: Timm Ganske @ OF      # ich bin ich ...
+options: dmq taste              # mit DMQ und warten auf Taste nach Programmlauf
+                                # hatte ich schon? Macht nix.
+; Ein Kommentar ...
+====== Ende cat_stat.dat
+
+Beispiel 2:
+====== Anfang cat_stat.dat
+Database: K:\MAUS\F\DATABASE\   # Database-Pfad, mit '\' am Ende!
+                                # Ausgabe nach cat_stat.erg
+Options: PMs adr 121fix         # PMs auch auswerten, adr.inf erzeugen
+                                # Durch die fehlende Angabe von Gruppen
+                                # wird die Statistik ber alle gemacht
+                                # Die Von:-Angaben von 1.21 werden entfernt
+====== Ende cat_stat.dat
+
+Beispiel 3, ein recht vollst„ndiges:
+====== Anfang cat_stat.dat
+Von: 3.7.1993 :0100                  # Datum_von
+Bis: 3.7.1993 :0336                  # Datum_bis
+
+database: K:\MAUS\F\DATABASE\        # Database-Pfad, mit '\' am Ende!
+Ausgabe: C:\CLIPBRD\cat_stat.erg     # Ergebnis-Ausgabedatei, Name beliebig
+
+Muss: G                              # Nur gelesene exportieren
+Nicht: DX                            # Gel”schte und Teilgel”schte nicht
+Nicht: X                             # Sagte ich schon? Macht nix ...
+
+options: p ms                        # Inaktive Optionen
+options: adr                         # aktive Optionen
+out: Flags                           # Outfile exportieren mit Flaginformationen
+Outname: C:\CLIPBRD\OUTFILE.TX       # unter diesem Namen
+
+Gruppen:
+ALLOHOL                              # Nur ALLOHOL, bitte
+#KUNTERBUNT
+#C.SYS.HP48
+#CD.MODEMS
+:Gruppen
+
+End:                                 # Eigentlich berflssig ...
+====== Ende cat_stat.dat
+
+
+Wem das alles zu kompliziert ist: Einfach Cat-Stat mal in den Database-Ordner 
+werden und ausprobieren - es l„uft auch ohne cat_stat.dat ;-). Die 
+Funktionsweise ist dann identisch mit der einer leeren cat_stat.dat, d.h. die 
+Default-Einstellungen gelten.
+
+Wer die doofen Ausgaben nicht mag oder wer nach TOS-Programmen nicht
+automatisch ein Warten auf Taste hat, kann die Ausgaben selbstverst„ndlich
+mit > wie gewohnt in eine Datei umlenken und hinterher auswerten oder
+wegwerfen.
+
+==============================================================================
+8. 2do-Liste
+==============================================================================
+Diese Liste ist haupts„chlich fr mich selbst gedacht.
+
+mehrere Einzelstatistiken
+negative Auswahlkriterien (alle Gruppen und dann mit - davor entfernen)
+zus„tzliche Kriterien, nicht nur Datum und Flags (Inhalt, Absender etc.)
+relative Daten, mit Bezug auf Wochentag und sonstigem Schnickschnack
+Modus fr Anh„ngen (mit Sortieren der Adr.Inf?)
+Statistiken ber M„use (Maus mit den meisten Mails, Box mit meisten aktiven)
+Quoteerkennung und -auswertung
+Kubu: Verketten der Highscorelisten.
+šbernehmen von 1.21-Realname, Box etc. in die entsprechenden Felder
+Sprache zur Steuerung der Ausgabe
+Portabel Fread, Fwrite, Fseek sowie Beschleunigung durch entsprechendes #define
+Erstes Auftauchen einer Person auflisten (Datenstruktur„nderung? Datum merken?)
+#HEAD erzeugen
+Fehler abort() hat xx Eintr„ge - Cache geht nicht
+umlautinsensitiver Gruppennamenvergleich Gruppen.INF
+Auswertung von CATGROUP.* statt GRUPPEN.INF, da letztere nicht richtig gepflegt wird
+Manchmal tauchen Leute in der Statistik doppelt auf

@@ -1,0 +1,21 @@
+Von: 26.10.1997 :000                  # Datum_von
+Bis: 1.11.1999 :000                  # Datum_bis
+
+database: C:\MAUS\OF\DATABASE\     # Database-Pfad, mit '\' am Ende!
+Ausgabe: C:\TMP\cat_stat.erg       # Ergebnis-Ausgabedatei, Name beliebig
+
+#Muss: M                              # Userflag 1
+#Nicht: DX                            # Gelîschte und Teilgelîschte nicht
+#Nicht: X                             # Sagte ich schon? Macht nix ...
+
+options: f ast u nique P Ms a dr n oh            # aktive Optionen
+#out: flags                                # 121fix nicht
+#outname: G:\TMP\cat_stat.out
+
+# Betreff: ksdvbwdvbwdvcdlvcbnlv
+
+Gruppen:
+Wombaz.Lokal
+:Gruppen
+
+#End:                                 # Eigentlich ÅberflÅssig ...

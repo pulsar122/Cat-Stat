@@ -21,10 +21,17 @@ Gruû,
 Maus:   Timm Ganske @ OF
 Usenet: Timm.Ganske@gmx.de
 
+Die Version 1.32 habe ich erstellt.
+
+Maus: Gerhard Stoll @ B
+
 ==============================================================================
 1. History
 ==============================================================================
 
+2.6.2002 -> 1.32
+ Kommt mit dem neuen Datenbankformat von Cat zurecht.
+ Erweiterung der Outfile-Ausgabe.
 30.5.
  Source freigegeben als CATSTATS.LZH
 3.5.2000
@@ -172,7 +179,7 @@ Einzeilige Befehle
 Befehl     Parameter                 Default
 
 Von:       Datum_von                 28.12.89
-Bis:       Datum_bis                 2.1.2005
+Bis:       Datum_bis                 2.1.2025
 Muss:      Muûflags
 Nicht:     Nichtflags
 Betreff: Betreff
@@ -202,7 +209,7 @@ Achtung: Innerhalb mehrzeiliger Befehle funktionieren die einzeiligen nicht!
 Von:
 Bis:
 
-Ein Datum ist immer 'Tag.Monat.Jahr'. Daten<28.12.1989 oder >2.1.2005 sind 
+Ein Datum ist immer 'Tag.Monat.Jahr'. Daten<28.12.1989 oder >2.1.2025 sind 
 nicht zugelassen. Nach einem : darf eine vierstellige Uhrzeit stehen im Format 
 hhmm, also z. B. 0130 fÅr halb Zwei, diese Angabe muû hinter dem Datum stehen, 
 wenn vorhanden.

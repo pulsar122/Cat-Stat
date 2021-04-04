@@ -1,3 +1,4 @@
+/*--------------------------------------------------------------------------*/
 #undef AN_SEM
 
 #ifndef GRUPSTAT
@@ -15,12 +16,14 @@
 
 #define min(x,y) (x<y?x:y)
 
-#define CATVER 1
-					  /* 0 - 1.21, 1 - >=1.3nž */
+#define CATVER 1											  /* 0 - 1.21, 1 - >=1.3nž 						*/
+
 #if (CATVER==1)
-	#define VERSION "Version 1.31 fr 2.x-Datenbank"
+	#define VERSION "Version 1.32 fr 2.x- & 5.x-Datenbanken"
+	#define CAT2xx	1
+	#define	CAT5xx	2
 #else
-	#define VERSION "Version 1.31 fr 1.21-Datenbank"
+	#define VERSION "Version 1.32 fr 1.21-Datenbank"
 #endif
 
 #define MAXGRP 512
@@ -101,19 +104,19 @@ typedef struct
 #if(CATVER==0)
 typedef struct
 {
-	unsigned int nummer;		/* interne Messagenummer	*/
-	char wegen[31];				/* Betreff					*/
-	unsigned long datum;		/* Datum im Maustauschformat*/
-	long start;					/* Offset in der Datendatei */
-	unsigned int idLength,		/* L„nge der ID				*/
-	NameL,						/* L„nge des Absendernamens */
-	Length;						/* L„nge der Mitteilung		*/
-	char bits;					/* : BITSET					*/ 
-	unsigned int	upMess,		/* Verkettungen				*/
+	unsigned int nummer;									/* interne Messagenummer						*/
+	char wegen[31];												/* Betreff													*/
+	unsigned long datum;									/* Datum im Maustauschformat				*/
+	long start;														/* Offset in der Datendatei 				*/
+	unsigned int idLength,								/* L„nge der ID											*/
+	NameL,																/* L„nge des Absendernamens 				*/
+	Length;																/* L„nge der Mitteilung							*/
+	char bits;														/* : BITSET													*/ 
+	unsigned int	upMess,									/* Verkettungen											*/
 		downMess;
 /*		rightMess,
 		leftMess,
-		KomCount;				/* Anzahl Kommentare		*/
+		KomCount;														/* Anzahl Kommentare								*/
 interessiert mich eh nicht, nur bei PMs brauche ich die entsprechenden Infos
 */
 
@@ -126,20 +129,38 @@ interessiert mich eh nicht, nur bei PMs brauche ich die entsprechenden Infos
 typedef struct
 {
 	unsigned short crc;
-	unsigned long datum; /* Datum im Maustauschformat */
+	unsigned long datum; 									/* Datum im Maustauschformat 				*/
 	unsigned short items;
 	unsigned short bits;
 	unsigned short hLength;
 	unsigned short idLength;
 	unsigned short Length;
-	long start; /* Offset in der Datendatei  */
-
+	unsigned long start;									/* Offset in der Datendatei  				*/
 	unsigned int	upMess,
 					downMess,
 					rightMess,
 					leftMess,
 					KomCount;
+} parblk_CAT2xx;
+
+/* GS 1.32; Start */
+typedef struct
+{
+	unsigned short crc;
+	unsigned long datum; 									/* Datum im Maustauschformat 				*/
+	unsigned long items;
+	unsigned short bits;
+	unsigned short hLength;
+	unsigned short idLength;
+	unsigned long Length;
+	unsigned long start;									/* Offset in der Datendatei  				*/
+	unsigned long	upMess,
+					downMess,
+					rightMess,
+					leftMess,
+					KomCount;
 } parblk;
+/* End; */
 
 typedef struct
 {
@@ -149,12 +170,12 @@ typedef struct
 
 typedef struct
 {
-	short typ;		/* 0 ™M verkettet 1 PM verkettet 2 ™M neu 3 PM neu */
+	short typ;						 /* 0 ™M verkettet 1 PM verkettet 2 ™M neu 3 PM neu */
 	unsigned short msgnum;
 	long unknown;
-	short versenden;/* 0 Zurckhalten 1 Versenden */
+	short versenden;											/* 0 Zurckhalten 1 Versenden 			*/
 	char unknown2[6];
-	unsigned short msglen;	/* Dateil„nge "MSG"msgnum".TXT" */
+	unsigned short msglen;								/* Dateil„nge "MSG"msgnum".TXT" 		*/
 	char unknown3[16];
 } infodat1;
 #endif
@@ -229,7 +250,6 @@ char statdatname[128];
 int betrlen;
 
 int parfail=0;
-long parpos;
 
 tag wtag[7];
 long summe[24];
@@ -247,6 +267,8 @@ char database[128], ausgabe[128]="";
 unsigned long mindatum,maxdatum;
 char mins[15],maxs[15];
 
+/*--------------------------------------------------------------------------*/
+
 int vergleich(person *p1, person *p2)
 {
 	if(p1->msgs==p2->msgs)
@@ -257,6 +279,8 @@ int vergleich(person *p1, person *p2)
 	else
 		return (p1->msgs>p2->msgs ? 0 : 1);
 }
+
+/*--------------------------------------------------------------------------*/
 
 void shellsort(person **arr, long anzahl, int (*compar)(person *p1, person *p2))
 {
@@ -273,10 +297,14 @@ void shellsort(person **arr, long anzahl, int (*compar)(person *p1, person *p2))
 			}
 }
 
+/*--------------------------------------------------------------------------*/
+
 int alphabetisch(person *p1, person *p2)
 {
 	return (strcmpi(p1->name, p2->name)>0);
 }
+
+/*--------------------------------------------------------------------------*/
 
 void init(void)
 {
@@ -289,10 +317,17 @@ void init(void)
 	}
 }
 
+/*--------------------------------------------------------------------------*/
+/* Testen ob der Header gruppe???.par die richtige Versionsnummer hat				*/
+/* Rckgabe: -121 = Cat-Version 1.21																				*/
+/*						-2  = Unbekannte Version																			*/
+/*           CAT2XX, CAT5XX = Datenbank-Version															*/
+
 #if (CATVER==1)
 int headerokP(filebuf *f)
 {
 	char buf[20];
+	int ret;
 
 	if(Fread(f->handle, 8, buf)!=8)
 		return FALSE;
@@ -300,10 +335,59 @@ int headerokP(filebuf *f)
 
 	if(memcmp(buf, "CAT ",4))
 		return -121;
-
-	return (memcmp(buf,"CAT \0\1\1\43",8) ? -2:0);
+	ret = memcmp(buf,"CAT \0\1\1\43",8);
+	if ( !ret )
+	{
+		ret = CAT2xx;
+		printf(" -> Header 2.xx\n" );
+	}
+	else
+	{
+		ret = memcmp(buf,"CAT \0\2\1\43",8);
+		if ( !ret )
+		{
+			ret = CAT5xx;
+			printf(" -> Header 5.xx\n" );
+		}
+		else
+			ret = -2;
+	}
+	return ret;
 }
 #endif
+
+/*--------------------------------------------------------------------------*/
+/* Holt einen Block aus der gruppe???.par																		*/
+/* Block  : Adresse auf eine Struktur parblk, entspricht dem neusten Format	*/
+/* Adr    : Adresse ab der die Daten liegen																	*/
+/* Version: Datenbankversion																								*/
+
+void GetParaBlock ( parblk *Block, char *Adr, int Version )
+{
+	parblk_CAT2xx msg_CAT2xx;
+	
+	if ( Version == CAT2xx)
+	{
+		memcpy( &msg_CAT2xx, Adr, sizeof(parblk_CAT2xx));
+		Block->crc = msg_CAT2xx.crc;
+		Block->datum = msg_CAT2xx.datum;
+		Block->items = msg_CAT2xx.items;
+		Block->bits = msg_CAT2xx.bits;
+		Block->hLength = msg_CAT2xx.hLength;
+		Block->idLength = msg_CAT2xx.idLength;
+		Block->Length = msg_CAT2xx.Length;
+		Block->start = msg_CAT2xx.start;
+		Block->upMess = msg_CAT2xx.upMess;
+		Block->downMess = msg_CAT2xx.downMess;
+		Block->rightMess = msg_CAT2xx.rightMess;
+		Block->leftMess = msg_CAT2xx.leftMess;
+		Block->KomCount = msg_CAT2xx.KomCount;
+	}
+	else
+		memcpy( Block, Adr, sizeof(parblk));
+}
+
+/*--------------------------------------------------------------------------*/
 
 #ifdef GRUPSTAT
 int schonzeitp(void)
@@ -424,6 +508,8 @@ int cachelin(long castart)
 	else
 		return -1;
 }
+
+/*--------------------------------------------------------------------------*/
 
 int cache(long castart, filebuf *f)
 {
@@ -609,6 +695,8 @@ int cache(long castart, filebuf *f)
 	}
 }
 
+/*--------------------------------------------------------------------------*/
+
 unsigned long mausdatum(time_t stdatum)
 {
 	struct tm ztm;
@@ -631,6 +719,8 @@ unsigned long mausdatum(time_t stdatum)
 		100L*(ztm.tm_year-90))));
 }
 
+/*--------------------------------------------------------------------------*/
+
 time_t stdatum(unsigned long mausdatum)
 {
 	struct tm ztm;
@@ -649,6 +739,8 @@ time_t stdatum(unsigned long mausdatum)
 
 	return mktime(&ztm)+timezone;
 }
+
+/*--------------------------------------------------------------------------*/
 
 char *mausdat2str(unsigned long mausdatum, char *buf)
 {
@@ -696,6 +788,8 @@ char *outfdatum(unsigned long when, char *buf)
 }
 #endif
 
+/*--------------------------------------------------------------------------*/
+
 void packliste(void)
 {
 	person *p1, *p2, *pmax;
@@ -709,6 +803,8 @@ void packliste(void)
 		}
 	}
 }
+
+/*--------------------------------------------------------------------------*/
 
 char *fgets2( char *str, int n, FILE *stream )
 {
@@ -736,6 +832,7 @@ char *fgets2( char *str, int n, FILE *stream )
 	else
 		return fgets2(str, n, stream);
 }
+/*--------------------------------------------------------------------------*/
 
 #ifndef GRUPSTAT
 char *delspaces(char *s)
@@ -775,11 +872,15 @@ void get_gruppen(FILE *file)
 	}
 }
 
+/*--------------------------------------------------------------------------*/
+
 void setbit(char *buf, unsigned short *flags, char c, unsigned short wert)
 {
 	if(strchr(buf, c))
 		*flags|=wert;
 }
+
+/*--------------------------------------------------------------------------*/
 
 void getmask(char *buf, unsigned short *flags)
 {
@@ -796,6 +897,9 @@ void getmask(char *buf, unsigned short *flags)
 	setbit(buf, flags, 'C', 128);
 	setbit(buf, flags, 'M', 256);
 }
+
+/*--------------------------------------------------------------------------*/
+/* Auswerten der einzelnen Zeilen in der Parameterdatei											*/
 
 int one_dat_par(FILE *file)
 {
@@ -879,6 +983,9 @@ int one_dat_par(FILE *file)
 	return 0;
 }
 
+/*--------------------------------------------------------------------------*/
+/* Parameterdatei ”ffnen 																										*/
+
 int read_dat(void)
 {
 	FILE *datfile;
@@ -893,24 +1000,24 @@ int read_dat(void)
 	}
 
 	mindatum=000+1010000L;
-	maxdatum=1501020000L;
+	maxdatum=3501020000L;
 
 	strcpy(database, ".\\");
 /*	strcpy(ausgabe, "CAT_STAT.ERG");*/
 
 	outfile=NULL;
 
-	if(datfile!=NULL)
+	if( datfile!=NULL )
 		while(!one_dat_par(datfile));
 
 	if(mindatum<000+1010000L || maxdatum<000+1020000L
-	 ||mindatum>1501010000L || maxdatum>1501020000L)
+	 ||mindatum>3501010000L || maxdatum>3501020000L)
 	{
 		printf("Fehlerhaftes Datum\n");
 		return -1;
 	}
 
-	if(alle)
+	if ( alle )
 	{
 		if(datfile!=NULL)
 			fclose(datfile);
@@ -939,7 +1046,7 @@ int read_dat(void)
 	if(pms)
 	{
 		for(aktgruppe=0; *gruppen[(long)aktgruppe]; aktgruppe++);
-		strncpy(gruppen[(long)aktgruppe++], "PMs", MAXGRPCHARS);
+			strncpy(gruppen[(long)aktgruppe++], "PMs", MAXGRPCHARS);
 	}
 
 	if(out)
@@ -965,6 +1072,8 @@ int read_dat(void)
 	return 0;
 }
 #endif
+
+/*--------------------------------------------------------------------------*/
 
 #define UMLAUTE1 "„„””žžŽŽ™™šš"
 #define UMLAUTE2 "AEOEUESSAEOEUE"
@@ -1009,6 +1118,8 @@ int chrvergl(char **p1, char **p2)
 	return strncmp(&c1, &c2, 1);
 }
 
+/*--------------------------------------------------------------------------*/
+
 int ownstrncmp(char *s1, char *s2, size_t maxlen)
 {
 	char *p1, *p2, *n;
@@ -1031,10 +1142,14 @@ int ownstrncmp(char *s1, char *s2, size_t maxlen)
 	return 0;
 }
 
+/*--------------------------------------------------------------------------*/
+
 int main(int argv, char **argc)
 {
 	int i,doppelt=0, aktgruppe;
+	int CATVersion;
 	long l;
+	long parpos;
 	time_t secvon, secbis;
 	
 #if (CATVER==1)
@@ -1066,7 +1181,7 @@ int main(int argv, char **argc)
 	printf("\n");
 #endif
 
-	time(&secvon);
+	time(&secvon);												/* Startzeit merken									*/
 
 	memset(wtag, 0, sizeof(wtag));
 	memset(gruppen, 0, sizeof(gruppen));
@@ -1083,11 +1198,11 @@ int main(int argv, char **argc)
  #endif
 #endif
 
-	now-=(now%(24*60L*60)); 	/* Keine Stunden, Minuten oder Sekunden	*/
+	now-=(now%(24*60L*60)); 					/* Keine Stunden, Minuten oder Sekunden	*/
 
-	monday=now-7*24*60L*60;	/* Ein Woche zurck						*/
+	monday=now-7*24*60L*60;								/* Ein Woche zurck									*/
 	ztm=localtime(&monday);
-	while(ztm->tm_wday!=1)	/* Wann war vorletzter Montag?			*/
+	while(ztm->tm_wday!=1)								/* Wann war vorletzter Montag?			*/
 	{
 		monday-=24*60L*60;
 		ztm=localtime(&monday);
@@ -1108,7 +1223,7 @@ int main(int argv, char **argc)
 	strcpy(ausgabe, "C:\\CLIPBRD\\SCRAP.TXT");
 	gruppen[1L][0L]=0;
 #else
-	if(read_dat())
+	if ( read_dat () )										/* Parameterdatei laden							*/
 		return -1;
 	aktgruppe=0;
 #endif
@@ -1116,7 +1231,7 @@ int main(int argv, char **argc)
 #ifdef GRUPSTAT
 	for(i=0;i<7;i++)
 	{
-		monday+=24*60L*60L; /* Naja, hierdrin ist es nicht immer Montag ;-) */
+		monday+=24*60L*60L; 		/* Naja, hierdrin ist es nicht immer Montag ;-) */
 		wtag[i].maxdatum=mausdatum(monday);
 	}
 
@@ -1302,11 +1417,11 @@ int main(int argv, char **argc)
 		linpar.lastseek=linpar.seekpos=linpar.len=linpar.eof=0;
 
 	#if (CATVER==1)
-		i=headerokP(&linpar);
-		if(i)
+		CATVersion = headerokP ( &linpar );
+		if( CATVersion != CAT2xx && CATVersion != CAT5xx )
 		{
 			printf("Falsche Cat-Version!\n");
-			return i;
+			return CATVersion;
 		}
 	#endif
 
@@ -1320,11 +1435,11 @@ int main(int argv, char **argc)
 #ifndef GRUPSTAT
 			int betr;
 #endif
-			memcpy(&msg,DORTLIN(parpos), sizeof(parblk));
+			GetParaBlock ( &msg, DORTLIN(parpos), CATVersion );
 			if(msg.datum>=mindatum && msg.datum<maxdatum
 #ifndef GRUPSTAT
-				&& ((msg.bits&mussflags)==mussflags)
-				&& (!(msg.bits&nichtflags))
+				&& (( msg.bits & mussflags ) == mussflags )
+				&& ( !(msg.bits&nichtflags) )
 #endif
 				)
 			{
@@ -1397,7 +1512,7 @@ int main(int argv, char **argc)
 				}
 
  #if (CATVER==1)
-				if(msg.items&1)
+				if ( msg.items & 1 )
 				{
 					short crc, crc1;
 	
@@ -1410,7 +1525,7 @@ int main(int argv, char **argc)
 					CACHEDAT(msgstart);
 					DORTWDAT(anzeint,msgstart);
 
-					if(anzeint>25)
+					if ( anzeint > 25 )
 					{
 						printf("Nachricht %.50s hat %hd Eintr„ge ...\n",
 								DORTDAT(msgstart), anzeint);
@@ -1457,7 +1572,7 @@ int main(int argv, char **argc)
 						}
 					}
 
-					crc=(crc16(n2)&(maxpers-1)); /* maxpers 2erpotenz! */
+					crc=(crc16(n2)&(maxpers-1)); 				/* maxpers 2erpotenz! 				*/
 					crc1=(crc-1)&(maxpers-1);
 
 					if(atpos)
@@ -1542,8 +1657,8 @@ int main(int argv, char **argc)
 
 					msgstart=msg.start;
 					CACHEDAT(msgstart);
-
-					sprintf(bufseq, "#%s", DORTDAT(msgstart));
+																							/* Message-ID ausgeben				*/
+					sprintf(bufseq, "#%s\r\n", DORTDAT(msgstart));
 					seqputs(bufseq, outfile);
  #if (CATVER==1)
 					msgstart+=msg.idLength;
@@ -1551,19 +1666,19 @@ int main(int argv, char **argc)
 						msgstart++;
 
 					CACHEDAT(msgstart);
-					DORTWDAT(anzeint,msgstart);
+					DORTWDAT(anzeint,msgstart);					/* Anzahl der Eintr„ge holen	*/
 
 					dort=msgstart+2;
 
-					/* Jetzt den Status */
-					if(msg.items & 0x8000) /* Sind Privat-Infos da? */
+																							/* Jetzt den Status 					*/
+					if(msg.items & 0x8000) 							/* Sind Privat-Infos da?			*/
 					{
 						privblk pinfo;
 
 						msgstart+=anzeint*2;
 						DORTWDAT(eint, msgstart);
 						msgstart=msg.start+eint;
-						if(msg.items&16384) /* Unbekannte Informationen */
+						if(msg.items & 0x4000)						/* Unbekannte Informationen 	*/
 						{
 							CACHEDAT(msgstart);
 							while(*DORTDAT(msgstart) || *(DORTDAT(msgstart+1)))
@@ -1577,22 +1692,20 @@ int main(int argv, char **argc)
 						len=strlen((char *)DORTDAT(msgstart))+1;
 						msgstart+=len;
 
-						if((msgstart^msg.start)&1)
+						if( (msgstart^msg.start) & 1 )
 							msgstart++;
 
 						CACHEDAT(msgstart);
-						memcpy(&pinfo,(privblk *)DORTDAT(msgstart),
-								sizeof(pinfo));
-						sprintf(bufseq, "B%c%s", pinfo.status,
-								lmausdatum(pinfo.lesedatum, buf));
+						memcpy ( &pinfo, (privblk *)DORTDAT(msgstart), sizeof(pinfo));
+						sprintf ( bufseq, "B%c%s", pinfo.status,
+						        lmausdatum(pinfo.lesedatum, buf));
 						seqputs(bufseq, outfile);
 					}
  #else
 					msgstart+=(int)strlen((char *)DORTDAT(msgstart))+1;
  #endif
 					if(flagsex)
-					{
-					/* Und jetzt die Flags */
+					{																		/* Und jetzt die Flags 				*/
 						strcpy(flags, "");
 	
 						if(msg.bits&1)
@@ -1615,14 +1728,19 @@ int main(int argv, char **argc)
 							strcat(flags, "C");
 						if(msg.bits&256)
 							strcat(flags, "M");
-						sprintf(bufseq, "s%s", flags);
+
+						if ( msg.bits & 0x4000 )
+							strcat(flags, "O");
+						if ( msg.bits & 0x0400 )
+							strcat(flags, "T");
+
+						sprintf(bufseq, "s%s\r\n", flags);
 						seqputs(bufseq, outfile);
 
 					}
-
 					if(strcmp(gruppen[(long)aktgruppe], "PMs"))
 					{
-						sprintf(bufseq, "G%s", gruppen[(long)aktgruppe]);
+						sprintf(bufseq, "G%s\r\n", gruppen[(long)aktgruppe]);
 						seqputs(bufseq, outfile);
 					}
  #if (CATVER==1)
@@ -1630,31 +1748,31 @@ int main(int argv, char **argc)
 					DORTWDAT(eint, dort);
 					sprintf(extinfobuf, "%s", DORTDAT(msg.start+eint));
 
-					if(msg.items&1) /* Existiert Von-Feld? */
+					if(msg.items&1) 								/* Existiert Von-Feld? 						*/
 					{
 						dort+=2;
 						DORTWDAT(eint,dort);
-						sprintf(bufseq, "V%s", DORTDAT(msg.start+eint));
+						sprintf(bufseq, "V%s\r\n", DORTDAT(msg.start+eint));
 						seqputs(bufseq, outfile);
 					}
 					else if(mitvon && !strcmp(gruppen[(long)aktgruppe], "PMs"))
 					{
-						sprintf(bufseq, "V%s", username);
+						sprintf(bufseq, "V%s\r\n", username);
 						seqputs(bufseq, outfile);
 					}
 
-					if(msg.items&2) /* Existiert ein An-Feld? */
+					if(msg.items&2) 								/* Existiert ein An-Feld? 				*/
 					{
 						dort+=2;
 						DORTWDAT(eint, dort);
 						strcpy(an, (char *)DORTDAT(msg.start+eint));
-						sprintf(bufseq, "A%.*s", MAXNAMECHARS, an);
+						sprintf(bufseq, "A%.*s\r\n", MAXNAMECHARS, an);
 						seqputs(bufseq, outfile);
 					}
 
-					sprintf(bufseq, "W%s", extinfobuf);
+					sprintf(bufseq, "W%s\r\n", extinfobuf);
 					seqputs(bufseq, outfile);
-					sprintf(bufseq, "E%s", lmausdatum(msg.datum, buf));
+					sprintf(bufseq, "E%s\r\n", lmausdatum(msg.datum, buf));
 					seqputs(bufseq, outfile);
 
 					extinfobuf[0]=0;
@@ -1663,21 +1781,21 @@ int main(int argv, char **argc)
 					{
 						if(msg.bits&1)
 						{
-							sprintf(bufseq, "BG%s", lmausdatum(msg.datum, buf));
+							sprintf(bufseq, "BG%s\r\n", lmausdatum(msg.datum, buf));
 							seqputs(bufseq, outfile);
 						}
 						else if(msg.bits&2)
 						{
-							sprintf(bufseq, "BF%s", lmausdatum(msg.datum, buf));
+							sprintf(bufseq, "BF%s\r\n", lmausdatum(msg.datum, buf));
 							seqputs(bufseq, outfile);
 						}
 					}
  #else
-					sprintf(bufseq, "V%s", name);
+					sprintf(bufseq, "V%s\r\n", name);
 					seqputs(bufseq, outfile);
-					sprintf(bufseq, "W%s", msg.wegen);
+					sprintf(bufseq, "W%s\r\n", msg.wegen);
 					seqputs(bufseq, outfile);
-					sprintf(bufseq, "E%s", lmausdatum(msg.datum, buf));
+					sprintf(bufseq, "E%s\r\n", lmausdatum(msg.datum, buf));
 					seqputs(bufseq, outfile);
 
 					msgstart+=(int)strlen((char *)DORTDAT(msgstart))+1;
@@ -1686,12 +1804,12 @@ int main(int argv, char **argc)
 					{
 						if(msg.bits&1)
 						{
-							sprintf(bufseq, "BG%s", lmausdatum(msg.datum, buf));
+							sprintf(bufseq, "BG%s\r\n", lmausdatum(msg.datum, buf));
 							seqputs(bufseq, outfile);
 						}
 						else if(msg.bits&2)
 						{
-							sprintf(bufseq, "BF%s", lmausdatum(msg.datum, buf));
+							sprintf(bufseq, "BF%s\r\n", lmausdatum(msg.datum, buf));
 							seqputs(bufseq, outfile);
 						}
 					}
@@ -1744,69 +1862,99 @@ int main(int argv, char **argc)
 						sprintf(extinfobuf+strlen(extinfobuf),
 							"Von : %s (%s)\r\n\r\n", name, outfdatum(msg.datum, buf));
 					}
-/*
-					if(msg.items&2)
-					{
-						sprintf(extinfobuf+strlen(extinfobuf),
-							">An  : %s\r\n", an);
-					}
-*/
-					if(msg.items&4) /* Existiert ein Fremd-ID-Feld? */
+
+					if(msg.items & 0x0004)					/* Existiert ein Fremd-ID-Feld? 	*/
 					{
 						dort+=2;
 						DORTWDAT(eint,dort);
-						sprintf(bufseq, "I%s", DORTDAT(msg.start+eint));
+						sprintf(bufseq, "I%s\r\n", DORTDAT(msg.start+eint));
 						seqputs(bufseq, outfile);
-/*						sprintf(extinfobuf+strlen(extinfobuf),
-								">MId : <%s>\r\n", DORTDAT(msg.start+eint));
-*/					}
+					}
 
-					if(msg.items&8) /* Existiert eine Fremdverkettung? */
+					if(msg.items & 0x0008)					/* Existiert eine Fremdverkettung?*/
 					{
 						dort+=2;
 						DORTWDAT(eint,dort);
-						sprintf(bufseq, "R%s", DORTDAT(msg.start+eint));
+						sprintf(bufseq, "R%s\r\n", DORTDAT(msg.start+eint));
 						seqputs(bufseq, outfile);
-/*						sprintf(extinfobuf+strlen(extinfobuf),
-								">RId : <%s>\r\n", DORTDAT(msg.start+eint));
-*/					}
-
-					if(msg.items&16) /* Existiert eine Box? */
-					{
-						dort+=2;
-						DORTWDAT(eint, dort);
-						sprintf(bufseq, "O%s", DORTDAT(msg.start+eint));
-						seqputs(bufseq, outfile);
-/*						sprintf(extinfobuf+strlen(extinfobuf),
-								">Box : %s\r\n", DORTDAT(msg.start+eint));
-*/					}
-
-					if(msg.items&32) /* Existiert ein Realname? */
-					{
-						dort+=2;
-						DORTWDAT(eint, dort);
-						sprintf(bufseq, "N%s", DORTDAT(msg.start+eint));
-						seqputs(bufseq, outfile);
-/*						sprintf(extinfobuf+strlen(extinfobuf),
-								">Name: %s\r\n", DORTDAT(msg.start+eint));
-*/
 					}
 
-					if(msg.items&64) /* Verkettung */
+					if(msg.items & 0x0010)					/* Existiert eine Box? 						*/
+					{
+						dort+=2;
+						DORTWDAT(eint, dort);
+						sprintf(bufseq, "O%s\r\n", DORTDAT(msg.start+eint));
+						seqputs(bufseq, outfile);
+					}
+
+					if(msg.items & 0x0020)					/* Existiert ein Realname? 				*/
+					{
+						dort+=2;
+						DORTWDAT(eint, dort);
+						sprintf(bufseq, "N%s\r\n", DORTDAT(msg.start+eint));
+						seqputs(bufseq, outfile);
+					}
+
+					if(msg.items & 0x0040 )					/* Verkettung 										*/
 					{
 						dort+=2;
 						DORTWDAT(eint, dort);
 						strcpy(an, (char *)DORTDAT(msg.start+eint));
-						sprintf(bufseq, "-%.*s", MAXNAMECHARS, an);
+						sprintf(bufseq, "-%.*s\r\n", MAXNAMECHARS, an);
 						seqputs(bufseq, outfile);
 					}
 
-					if(msg.items&128) /* Distribution */
+					if(msg.items & 0x0080 )					/* Distribution 									*/
 					{
 						dort+=2;
 						DORTWDAT(eint, dort);
 						strcpy(an, (char *)DORTDAT(msg.start+eint));
-						sprintf(bufseq, "D%.*s", MAXNAMECHARS, an);
+						sprintf(bufseq, "D%.*s\r\n", MAXNAMECHARS, an);
+						seqputs(bufseq, outfile);
+					}
+
+					if(msg.items & 0x0100 )					/* Gateway			 									*/
+					{
+						dort+=2;
+						DORTWDAT(eint, dort);
+						strcpy(an, (char *)DORTDAT(msg.start+eint));
+						sprintf(bufseq, "Y%.*s\r\n", MAXNAMECHARS, an);
+						seqputs(bufseq, outfile);
+					}
+
+					if(msg.items & 0x0200 )					/* Mime Information								*/
+					{
+						dort+=2;
+						DORTWDAT(eint, dort);
+						strcpy(an, (char *)DORTDAT(msg.start+eint));
+						sprintf(bufseq, "M%.*s\r\n", MAXNAMECHARS, an);
+						seqputs(bufseq, outfile);
+					}
+
+					if(msg.items & 0x0400 )					/* Followup bei News							*/
+					{
+						dort+=2;
+						DORTWDAT(eint, dort);
+						strcpy(an, (char *)DORTDAT(msg.start+eint));
+						sprintf(bufseq, "F%.*s\r\n", MAXNAMECHARS, an);
+						seqputs(bufseq, outfile);
+					}
+
+					if(msg.items & 0x0800 )					/* ReplyTo												*/
+					{
+						dort+=2;
+						DORTWDAT(eint, dort);
+						strcpy(an, (char *)DORTDAT(msg.start+eint));
+						sprintf(bufseq, "T%.*s\r\n", MAXNAMECHARS, an);
+						seqputs(bufseq, outfile);
+					}
+					
+					if(msg.items & 0x1000 )					/* Sender													*/
+					{
+						dort+=2;
+						DORTWDAT(eint, dort);
+						strcpy(an, (char *)DORTDAT(msg.start+eint));
+						sprintf(bufseq, "S%.*s\r\n", MAXNAMECHARS, an);
 						seqputs(bufseq, outfile);
 					}
 
@@ -1814,10 +1962,12 @@ int main(int argv, char **argc)
 
 					if(msg.items&1)
 					{
-						sprintf(bufseq, ">");
+						sprintf(bufseq, ">\r\n");
 						seqputs(bufseq, outfile);
 					}
 */
+					sprintf(bufseq, ">\r\n");
+					seqputs(bufseq, outfile);
 
 					msgstart=msg.start+msg.hLength;
  #else
@@ -1848,7 +1998,7 @@ int main(int argv, char **argc)
 /*							if(zwi>(char *)DORTDAT(msgstart+msg.NameL+msg.idLength+msg.length))
 								zwi=(char *)DORTDAT(msgstart+msg.NameL+msg.idLength+msg.length);
 */							*zwi=0;
-							sprintf(bufseq, ":%s", DORTDAT(msgstart));
+							sprintf(bufseq, ":%s\r\n", DORTDAT(msgstart));
 							seqputs(bufseq, outfile);
 							msgstart=(long)(zwi+1-dat.buf+dat.lastseek);
 						}
@@ -1861,7 +2011,10 @@ int main(int argv, char **argc)
 #endif
 #endif
 			}
-			parpos+=sizeof(parblk);
+			if ( CATVersion == CAT2xx )
+				parpos+=sizeof(parblk_CAT2xx);
+			else
+				parpos+=sizeof(parblk);
 		}
 #if (CATVER<1)
 		Fclose(par.handle);
@@ -1925,27 +2078,27 @@ int main(int argv, char **argc)
 		fprintf(file,"Statistik der letzten Woche in %s:\n\n", GRUPPE);
 #endif
 
-/* Text abh„ngig von Anzahl Mitteilungen machen !**/
+/* Text abh„ngig von Anzahl Mitteilungen machen ! 													*/
 
 #ifndef GRUPSTAT
 	if(outfile)
 	{
-		seqputs("#LOG", outfile);
-		sprintf(bufseq,":!V%s",__DATE__);
+		seqputs("#LOG\r\n", outfile);
+		sprintf(bufseq,":!V%s\r\n",__DATE__);
 		seqputs(bufseq, outfile);
 		time(&now);
-		sprintf(bufseq,":!I%s", lmausdatum(mausdatum(now), buf));
+		sprintf(bufseq,":!I%s\r\n", lmausdatum(mausdatum(now), buf));
 		seqputs(bufseq, outfile);
-		sprintf(bufseq,":!Cat-Stat %s", VERSION);
+		sprintf(bufseq,":!Cat-Stat %s\r\n", VERSION);
 		seqputs(bufseq, outfile);
 		if(*username)
 		{
-			sprintf(bufseq,":!Database von %s", username);
+			sprintf(bufseq,":!Database von %s\r\n", username);
 			seqputs(bufseq, outfile);
 		}
-		seqputs(":#CMD", outfile);
-		seqputs(":#", outfile);
-		seqputs("#", outfile);
+		seqputs(":#CMD\r\n", outfile);
+		seqputs(":#\r\n", outfile);
+		seqputs("#\r\n", outfile);
 		seqclose(outfile);
 	}
 #endif
@@ -2045,7 +2198,7 @@ printf("3\n");
 	fprintf(file, "---\n");
 
 	l=(long)difftime(stdatum(maxdatum), stdatum(mindatum))/60/60L/24;
-printf("4\n");
+	printf("4\n");
 
 	if(dmq)
 	{
@@ -2075,7 +2228,7 @@ printf("4\n");
 	for(i=0;i<24;i++)
 		fprintf(file,"---");
 	fprintf(file,"\n");
-printf("5\n");
+	printf("5\n");
 
 	fprintf(file,"  ");
 	for(i=0;i<24;i+=2)
@@ -2097,7 +2250,7 @@ printf("5\n");
 		strcat(buf, "ADR.INF");
 		outfile=seqopen(buf, SEQ_WRITE, &seqbufsiz);
 		shellsort(psort,schreiber,alphabetisch);
-printf("6\n");
+		printf("6\n");
 		for(l=0;l<schreiber;l++)
 		{
 			duplist *zwi;
@@ -2119,7 +2272,7 @@ printf("6\n");
 		seqclose(outfile);
 	}
 #endif
-printf("7\n");
+	printf("7\n");
 
 	if(doppelt)
 	{
@@ -2148,7 +2301,7 @@ printf("7\n");
 			}
 		}
 	}
-printf("8\n");
+	printf("8\n");
 
 #ifdef GRUPSTAT
 	fprintf(file,"\nDiese Msg wird beim Booten automatisch erstellt, wenn es \n");
@@ -2206,7 +2359,7 @@ printf("8\n");
 		}
 	}
 
-   #if (CATVER==1)
+	#if (CATVER==1)
 	file=fopen(MAUSPFAD"MESSAGES\\MSGINFO.DAT","rb+");
 	if(file==NULL)
 	{
